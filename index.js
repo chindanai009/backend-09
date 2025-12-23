@@ -23,7 +23,7 @@ function clearActiveToken(userId) {
 // 1) CONFIG / SERVER TUNING
 // --------------------------------------------------
 
-export const app = express();
+const app = express();
 
 // log env summary (no secrets)
 console.log("[DB CONFIG]", {
@@ -337,3 +337,5 @@ if (process.env.NODE_ENV !== "test") {
     console.log(`✅ Server is running on port ${PORT}`);
   });
 }
+
+export default app;
