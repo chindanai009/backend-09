@@ -8,12 +8,15 @@ yarn-error.log*
 pnpm-debug.log*
 package-lock.json
 
-# Environment files (ไม่ให้ push คีย์ลับ)
+# Environment files (ไม่ให้ push คีย์ลับ dev)
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.development
+.env.test
+.env.production
+
+# Track production env separately if needed (Vercel)
+# .env.production is tracked for CI/CD deployment
 
 # --------------------------
 # Logs
