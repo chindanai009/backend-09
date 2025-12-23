@@ -4,46 +4,76 @@ import swaggerUi from "swagger-ui-express";
 const specs = {
   openapi: "3.0.0",
   info: {
-    title: "🚀 BackEnd API",
-    version: "1.0.0",
+    title: "User Management Service API",
+    version: "2.0.0",
     description: `
-# Welcome to the BackEnd API Documentation
+# Service Integration Platform
 
-This API provides comprehensive user management and authentication services.
+A comprehensive REST API service for user lifecycle management and authentication workflows.
 
-## 🔐 Authentication
-Most endpoints require JWT authentication. To authenticate:
-1. Call \`POST /login\` with your credentials
-2. Copy the returned \`token\`
-3. Click the **Authorize** button above
-4. Enter: \`Bearer <your-token>\`
+## Core Features
 
-## 📚 Quick Start
-| Action | Endpoint | Auth Required |
-|--------|----------|---------------|
-| Health Check | \`GET /ping\` | ❌ |
-| Login | \`POST /login\` | ❌ |
-| Logout | \`POST /logout\` | ✅ |
-| Register | \`POST /users\` | ❌ |
-| List Users | \`GET /users\` | ✅ |
-| Get User | \`GET /users/{id}\` | ✅ |
-| Update User | \`PUT /users/:id\` | ✅ |
-| Delete User | \`DELETE /users/:id\` | ✅ |
+### 🔑 Security & Authentication
+- Token-based JWT authentication
+- Secure password hashing with bcrypt
+- Session token management
+- Role-based access control
 
----
+### 👥 User Management
+- Complete CRUD operations
+- User profile management
+- Account status tracking
+- Bulk user operations support
+
+### 📊 System Operations  
+- Health monitoring
+- Database connectivity checks
+- Performance metrics
+- Request logging
+
+## 🔐 How to Authenticate
+
+1. Register a new account via \`POST /users\`
+2. Login via \`POST /login\` to receive an access token
+3. For protected endpoints, use the **Authorize** button (top-right)
+4. Enter token format: \`Bearer <your-token>\`
+5. All subsequent requests will include your token automatically
+
+## Endpoint Overview
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | \`/\` | Service status | ❌ |
+| POST | \`/users\` | Create user account | ❌ |
+| POST | \`/login\` | User authentication | ❌ |
+| GET | \`/users\` | List all users | ✅ |
+| GET | \`/users/:id\` | Get user details | ✅ |
+| PUT | \`/users/:id\` | Update user profile | ✅ |
+| DELETE | \`/users/:id\` | Remove user account | ✅ |
+| POST | \`/logout\` | Terminate session | ✅ |
+
+## Error Handling
+
+All responses follow a consistent structure:
+- \`status\`: Operation status (success/error)
+- \`message\`: Human-readable message
+- \`data\`: Response payload
+- \`code\`: Error code (if applicable)
     `,
     contact: {
-      name: "API Support",
-      email: "support@example.com",
+      name: "Technical Support",
+      email: "dev-support@service.io",
+      url: "https://service.io/support"
     },
     license: {
-      name: "MIT",
-      url: "https://opensource.org/licenses/MIT",
+      name: "Apache 2.0",
+      url: "https://www.apache.org/licenses/LICENSE-2.0.html"
     },
+    termsOfService: "https://service.io/terms"
   },
   externalDocs: {
-    description: "📖 Learn more about this API",
-    url: "https://github.com/chindanai009/backend-09",
+    description: "📚 View Full Documentation",
+    url: "https://docs.service.io/api"
   },
   servers: [
     {
