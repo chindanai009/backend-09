@@ -15,9 +15,6 @@ package-lock.json
 .env.test
 .env.production
 
-# Track production env separately if needed (Vercel)
-# .env.production is tracked for CI/CD deployment
-
 # --------------------------
 # Logs
 # --------------------------

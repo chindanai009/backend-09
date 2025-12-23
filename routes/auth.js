@@ -1,38 +1,30 @@
-const express = require('express');
+import express from "express";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import verifyToken, { activeTokens } from "../middleware/auth.js";
+import { db } from "../config/db.js";
+
 const router = express.Router();
-const db = require('../config/db');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
 /**
- * @swagger
+ * @openapi
  * /login:
  *   post:
- *     summary: เข้าสู่ระบบ (Login)
- *     description: |
- *       ตรวจสอบข้อมูลประจำตัวและสร้าง JWT Token สำหรับการเข้าถึง protected routes
- *       
- *       **ขั้นตอน:**
- *       1. ตรวจสอบว่า username มีอยู่ในระบบ
- *       2. ตรวจสอบรหัสผ่านว่าตรงกับข้อมูลในฐานข้อมูล
- *       3. สร้าง JWT Token ที่มีอายุ 1 ชั่วโมง
- *       4. ส่งกลับ token สำหรับใช้ในการเข้าถึง API endpoints อื่น ๆ
  *     tags:
  *       - Authentication
+ *     summary: User login
+ *     description: Authenticate user and receive a JWT token
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/LoginRequest'
- *           example:
- *             username: "it68a"
- *             password: "password123"
+ *             $ref: '#/components/schemas/LoginInput'
  *     responses:
  *       200:
- *         description: เข้าสู่ระบบสำเร็จ
+ *         description: Login successful
  *         content:
  *           application/json:
  *             schema:
@@ -40,50 +32,91 @@ const SECRET_KEY = process.env.JWT_SECRET;
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "Login successful"
+ *                   example: Login successful
  *                 token:
  *                   type: string
- *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
- *                   description: "JWT Token - ใช้ใน header: Authorization: Bearer <token>"
+ *                   description: JWT token for authentication
+ *       400:
+ *         description: Missing required fields
  *       401:
- *         description: ข้อมูลประจำตัวไม่ถูกต้อง
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             examples:
- *               userNotFound:
- *                 value:
- *                   error: "User not found"
- *               invalidPassword:
- *                 value:
- *                   error: "Invalid password"
+ *         description: Invalid credentials
  *       500:
- *         description: เซิร์ฟเวอร์เกิดข้อผิดพลาด
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Login failed"
+ *         description: Login failed
  */
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const { username, password } = req.body;
+
+  const missing = ["username", "password"].find(
+    (field) => !req.body[field] || req.body[field] === ""
+  );
+  if (missing) {
+    return res.status(400).json({
+      error: `Missing required field: ${missing}`,
+    });
+  }
+
   try {
-    const [rows] = await db.query('SELECT * FROM tbl_users WHERE username = ?', [username]);
-    if (rows.length === 0) return res.status(401).json({ error: 'User not found' });
+    const [rows] = await db.execute(
+      "SELECT id, fullname, lastname, password FROM tbl_users WHERE username = ? LIMIT 1",
+      [username]
+    );
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: "User not found" });
+    }
 
     const user = rows[0];
+
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: 'Invalid password' });
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
 
-    const token = jwt.sign({ id: user.id, fullname: user.fullname, lastname: user.lastname }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { id: user.id, fullname: user.fullname, lastname: user.lastname },
+      SECRET_KEY,
+      { expiresIn: "1h" }
+    );
 
-    res.json({ message: 'Login successful', token });
+    activeTokens.set(user.id, token);
+
+    res.json({ message: "Login successful", token });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ error: "Login failed" });
   }
 });
 
-module.exports = router;
+/**
+ * @openapi
+ * /logout:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: User logout
+ *     description: Invalidate the current user's session
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ *                 message:
+ *                   type: string
+ *                   example: Logged out
+ *       401:
+ *         description: Unauthorized
+ */
+router.post("/logout", verifyToken, (req, res) => {
+  activeTokens.delete(req.user.id);
+  res.json({ status: "ok", message: "Logged out" });
+});
+
+export default router;

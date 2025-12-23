@@ -1,213 +1,155 @@
-const express = require('express');
+import express from "express";
+import bcrypt from "bcrypt";
+import verifyToken from "../middleware/auth.js";
+import { db } from "../config/db.js";
+
 const router = express.Router();
-const db = require('../config/db');
-const bcrypt = require('bcrypt');
-const { verifyToken } = require('../middleware/auth');
+
+const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS || "10", 10);
+const MAX_PAGE_SIZE = parseInt(process.env.MAX_PAGE_SIZE || "100", 10);
+
+// --------------------------------------------------
+// SMALL UTILS
+// --------------------------------------------------
+
+async function runQuery(sql, params = []) {
+  if (params.length === 0) {
+    const [rows] = await db.query(sql);
+    return rows;
+  } else {
+    const [rows] = await db.execute(sql, params);
+    return rows;
+  }
+}
+
+function sendDbError(res, err, httpCode = 500) {
+  console.error("[DB ERROR]", err);
+  return res.status(httpCode).json({
+    status: "error",
+    message: err?.message ?? "Database error",
+    code: err?.code ?? null,
+  });
+}
+
+function requireFields(obj, keys) {
+  for (const k of keys) {
+    if (obj[k] === undefined || obj[k] === null || obj[k] === "") {
+      return k;
+    }
+  }
+  return null;
+}
+
+// --------------------------------------------------
+// ROUTES
+// --------------------------------------------------
 
 /**
- * @swagger
+ * @openapi
  * /users:
  *   get:
- *     summary: ดึงรายการผู้ใช้ทั้งหมด
- *     description: |
- *       ดึงข้อมูลผู้ใช้ทั้งหมดจากระบบ (ชื่อจริง, ชื่อเต็ม, นามสกุล)
- *       
- *       **หมายเหตุ:** 
- *       - ต้องมี JWT Token ที่ถูกต้อง ใน header `Authorization: Bearer <token>`
- *       - Token ได้จากการ Login (/login)
  *     tags:
  *       - Users
+ *     summary: Get all users
+ *     description: Retrieve a paginated list of all users
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: Number of users per page
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Page number
  *     responses:
  *       200:
- *         description: ดึงข้อมูลสำเร็จ
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   firstname:
- *                     type: string
- *                     example: "John"
- *                   fullname:
- *                     type: string
- *                     example: "John Doe"
- *                   lastname:
- *                     type: string
- *                     example: "Doe"
- *       401:
- *         description: ไม่ได้รับการยืนยันตัวตน (Missing or invalid token)
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       500:
- *         description: เซิร์ฟเวอร์เกิดข้อผิดพลาด
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *   post:
- *     summary: สร้างผู้ใช้ใหม่ (สมัครสมาชิก)
- *     description: |
- *       เพิ่มผู้ใช้ใหม่เข้าสู่ระบบ พร้อมการ hash รหัสผ่าน
- *       
- *       **ขั้นตอน:**
- *       1. ตรวจสอบว่า password ไม่ว่าง
- *       2. Hash รหัสผ่านด้วย bcrypt (10 rounds)
- *       3. บันทึกข้อมูลลงในฐานข้อมูล
- *       4. ส่งกลับ ID และข้อมูลผู้ใช้ (ไม่รวม password)
- *     tags:
- *       - Users
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreateUserRequest'
- *           example:
- *             firstname: "John"
- *             fullname: "John Doe"
- *             lastname: "Doe"
- *             username: "johndoe"
- *             password: "securepassword123"
- *             status: "active"
- *     responses:
- *       200:
- *         description: สร้างผู้ใช้สำเร็จ
+ *         description: List of users
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
- *                   type: integer
- *                   example: 5
- *                 firstname:
- *                   type: string
- *                   example: "John"
- *                 fullname:
- *                   type: string
- *                   example: "John Doe"
- *                 lastname:
- *                   type: string
- *                   example: "Doe"
- *                 username:
- *                   type: string
- *                   example: "johndoe"
  *                 status:
  *                   type: string
- *                   example: "active"
- *       400:
- *         description: ข้อมูลที่ส่งมาไม่ถูกต้อง
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Password is required"
+ *                   example: ok
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *       401:
+ *         description: Unauthorized
  *       500:
- *         description: เซิร์ฟเวอร์เกิดข้อผิดพลาด
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               error: "Insert failed"
+ *         description: Database error
  */
-router.get('/', verifyToken, async (req, res) => {
-	try {
-		const [rows] = await db.query('SELECT id, firstname, fullname, lastname FROM tbl_users');
-		res.json(rows);
-	} catch (err) {
-		res.status(500).json({ error: 'Query failed' });
-	}
-});
+router.get("/", verifyToken, async (req, res) => {
+  try {
+    const limitParam = Number.parseInt(req.query.limit ?? "", 10);
+    const limit =
+      Number.isNaN(limitParam) || limitParam <= 0
+        ? null
+        : Math.min(limitParam, MAX_PAGE_SIZE);
 
-router.post('/', async (req, res) => {
-	const { firstname, fullname, lastname, username, password, status } = req.body;
-	try {
-		if (!password) return res.status(400).json({ error: 'Password is required' });
-		const hashedPassword = await bcrypt.hash(password, 10);
+    const pageParam = Number.parseInt(req.query.page ?? "", 10);
+    const page = Number.isNaN(pageParam) || pageParam <= 0 ? 1 : pageParam;
+    const offset = limit !== null ? Math.max(0, (page - 1) * limit) : 0;
 
-		const [result] = await db.query(
-			'INSERT INTO tbl_users (firstname, fullname, lastname, username, password, status) VALUES (?, ?, ?, ?, ?, ?)',
-			[firstname, fullname, lastname, username, hashedPassword, status]
-		);
+    let sql =
+      "SELECT id, firstname, fullname, lastname, username, status, created_at, updated_at FROM tbl_users";
+    const params = [];
+    if (limit !== null) {
+      sql += " LIMIT ? OFFSET ?";
+      params.push(limit, offset);
+    }
 
-		res.json({ id: result.insertId, firstname, fullname, lastname, username, status });
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: 'Insert failed' });
-	}
+    const dataPromise = runQuery(sql, params);
+    const countPromise =
+      limit !== null
+        ? runQuery("SELECT COUNT(*) AS total FROM tbl_users")
+        : null;
+
+    const rows = await dataPromise;
+    const responseBody = {
+      status: "ok",
+      count: rows.length,
+      data: rows,
+    };
+
+    if (countPromise) {
+      const total = await countPromise;
+      responseBody.total = total[0].total;
+      responseBody.page = page;
+      responseBody.limit = limit;
+    }
+
+    res.json(responseBody);
+  } catch (err) {
+    return sendDbError(res, err);
+  }
 });
 
 /**
- * @swagger
+ * @openapi
  * /users/{id}:
  *   get:
- *     summary: ดึงข้อมูลผู้ใช้ตาม ID
- *     description: |
- *       ดึงรายละเอียดทั้งหมดของผู้ใช้คนหนึ่ง (รวม username และข้อมูลอื่น ๆ)
- *       
- *       **หมายเหตุ:** 
- *       - ต้องมี JWT Token ที่ถูกต้อง
- *       - ID ต้องมีอยู่ในระบบ ถ้าไม่พบจะ return 404
  *     tags:
  *       - Users
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: User ID (ตัวเลข)
- *         example: 1
- *     responses:
- *       200:
- *         description: ดึงข้อมูลสำเร็จ
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       401:
- *         description: ไม่ได้รับการยืนยันตัวตน
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: ไม่พบผู้ใช้ที่มี ID นี้
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *             example:
- *               message: "User not found"
- *   put:
- *     summary: อัพเดตข้อมูลผู้ใช้
- *     description: |
- *       แก้ไขข้อมูลผู้ใช้ (ชื่อ นามสกุล) และ/หรือ รหัสผ่าน
- *       
- *       **ขั้นตอน:**
- *       1. ค้นหาผู้ใช้ตาม ID
- *       2. อัพเดตชื่อ นามสกุล
- *       3. ถ้ามี password ใหม่ จะ hash และอัพเดตด้วย
- *       4. ส่งกลับข้อความสำเร็จ
- *       
- *       **หมายเหตุ:** 
- *       - password เป็น optional - ถ้าไม่ส่งจะไม่อัพเดต
- *       - ต้องมี JWT Token ที่ถูกต้อง
- *     tags:
- *       - Users
+ *     summary: Get user by ID
+ *     description: Retrieve a single user by their ID
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -217,58 +159,147 @@ router.post('/', async (req, res) => {
  *         schema:
  *           type: integer
  *         description: User ID
- *         example: 1
+ *     responses:
+ *       200:
+ *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Database error
+ */
+router.get("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const rows = await runQuery(
+      "SELECT id, firstname, fullname, lastname, username, status, created_at, updated_at FROM tbl_users WHERE id = ?",
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res
+        .status(404)
+        .json({ status: "not_found", message: "User not found" });
+    }
+
+    res.json({
+      status: "ok",
+      data: rows[0],
+    });
+  } catch (err) {
+    return sendDbError(res, err);
+  }
+});
+
+/**
+ * @openapi
+ * /users:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Create a new user
+ *     description: Register a new user account
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UpdateUserRequest'
- *           example:
- *             firstname: "Jane"
- *             fullname: "Jane Doe"
- *             lastname: "Doe"
- *             password: "newpassword456"
+ *             $ref: '#/components/schemas/UserInput'
  *     responses:
- *       200:
- *         description: อัพเดตสำเร็จ
+ *       201:
+ *         description: User created successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 message:
+ *                 status:
  *                   type: string
- *                   example: "User updated successfully"
- *       401:
- *         description: ไม่ได้รับการยืนยันตัวตน
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       404:
- *         description: ไม่พบผู้ใช้ที่มี ID นี้
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *                   example: ok
+ *                 id:
+ *                   type: integer
+ *                 firstname:
+ *                   type: string
+ *                 fullname:
+ *                   type: string
+ *                 lastname:
+ *                   type: string
+ *                 username:
+ *                   type: string
+ *       400:
+ *         description: Bad request - missing required fields
  *       500:
- *         description: เซิร์ฟเวอร์เกิดข้อผิดพลาด
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *   delete:
- *     summary: ลบผู้ใช้
- *     description: |
- *       ลบข้อมูลผู้ใช้จากระบบ (permanent delete)
- *       
- *       **หมายเหตุ:** 
- *       - ต้องมี JWT Token ที่ถูกต้อง
- *       - การลบจะเป็นการลบถาวร ไม่สามารถกู้คืนได้
- *       - ID ต้องมีอยู่ในระบบ ถ้าไม่พบจะ return 404
+ *         description: Database error
+ */
+router.post("/", async (req, res) => {
+  try {
+    const {
+      firstname,
+      fullname,
+      lastname,
+      username,
+      password,
+      status = "active",
+    } = req.body;
+
+    const missing = requireFields(req.body, [
+      "firstname",
+      "fullname",
+      "lastname",
+      "username",
+      "password",
+    ]);
+    if (missing) {
+      return res.status(400).json({
+        status: "bad_request",
+        message: `Missing required field: ${missing}`,
+      });
+    }
+
+    const hashed = await bcrypt.hash(password, BCRYPT_ROUNDS);
+
+    const [result] = await db.execute(
+      `
+        INSERT INTO tbl_users (firstname, fullname, lastname, username, password, status)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [firstname, fullname, lastname, username, hashed, status]
+    );
+
+    res.status(201).json({
+      status: "ok",
+      id: result.insertId,
+      firstname,
+      fullname,
+      lastname,
+      username,
+      status,
+    });
+  } catch (err) {
+    return sendDbError(res, err);
+  }
+});
+
+/**
+ * @openapi
+ * /users/{id}:
+ *   put:
  *     tags:
  *       - Users
+ *     summary: Update user
+ *     description: Update an existing user's information
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -278,84 +309,172 @@ router.post('/', async (req, res) => {
  *         schema:
  *           type: integer
  *         description: User ID
- *         example: 1
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstname:
+ *                 type: string
+ *               fullname:
+ *                 type: string
+ *               lastname:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               status:
+ *                 type: string
  *     responses:
  *       200:
- *         description: ลบสำเร็จ
+ *         description: User updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
  *                 message:
  *                   type: string
- *                   example: "User deleted"
+ *                   example: User updated successfully
+ *       400:
+ *         description: No fields to update
  *       401:
- *         description: ไม่ได้รับการยืนยันตัวตน
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         description: Unauthorized
  *       404:
- *         description: ไม่พบผู้ใช้ที่มี ID นี้
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
+ *         description: User not found
  *       500:
- *         description: เซิร์ฟเวอร์เกิดข้อผิดพลาด
+ *         description: Database error
+ */
+router.put("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstname, fullname, lastname, username, password, status } =
+      req.body;
+
+    // dynamic fields
+    const fields = [];
+    const params = [];
+
+    if (firstname !== undefined) {
+      fields.push("firstname = ?");
+      params.push(firstname);
+    }
+    if (fullname !== undefined) {
+      fields.push("fullname = ?");
+      params.push(fullname);
+    }
+    if (lastname !== undefined) {
+      fields.push("lastname = ?");
+      params.push(lastname);
+    }
+    if (username !== undefined) {
+      fields.push("username = ?");
+      params.push(username);
+    }
+    if (status !== undefined) {
+      fields.push("status = ?");
+      params.push(status);
+    }
+    if (password !== undefined) {
+      const hashed = await bcrypt.hash(password, BCRYPT_ROUNDS);
+      fields.push("password = ?");
+      params.push(hashed);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({
+        status: "bad_request",
+        message: "No fields to update",
+      });
+    }
+
+    fields.push("updated_at = CURRENT_TIMESTAMP");
+
+    const [result] = await db.execute(
+      `UPDATE tbl_users SET ${fields.join(", ")} WHERE id = ?`,
+      [...params, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ status: "not_found", message: "User not found" });
+    }
+
+    res.json({
+      status: "ok",
+      message: "User updated successfully",
+    });
+  } catch (err) {
+    return sendDbError(res, err);
+  }
+});
+
+/**
+ * @openapi
+ * /users/{id}:
+ *   delete:
+ *     tags:
+ *       - Users
+ *     summary: Delete user
+ *     description: Delete a user by their ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ *                 message:
+ *                   type: string
+ *                   example: User deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Database error
  */
-router.get('/:id', verifyToken, async (req, res, next) => {
-	const { id } = req.params;
-	try {
-		const [rows] = await db.query('SELECT * FROM tbl_users WHERE id = ?', [id]);
-		if (rows.length === 0) return res.status(404).json({ message: 'User not found' });
-		res.json(rows[0]);
-	} catch (err) {
-		next(err);
-	}
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [result] = await db.execute("DELETE FROM tbl_users WHERE id = ?", [
+      id,
+    ]);
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ status: "not_found", message: "User not found" });
+    }
+
+    res.json({
+      status: "ok",
+      message: "User deleted successfully",
+    });
+  } catch (err) {
+    return sendDbError(res, err);
+  }
 });
 
-router.put('/:id', verifyToken, async (req, res) => {
-	const { id } = req.params;
-	const { firstname, fullname, lastname, password } = req.body;
-
-	try {
-		let query = 'UPDATE tbl_users SET firstname = ?, fullname = ?, lastname = ?';
-		const params = [firstname, fullname, lastname];
-
-		if (password) {
-			const hashedPassword = await bcrypt.hash(password, 10);
-			query += ', password = ?';
-			params.push(hashedPassword);
-		}
-
-		query += ' WHERE id = ?';
-		params.push(id);
-
-		const [result] = await db.query(query, params);
-		if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
-
-		res.json({ message: 'User updated successfully' });
-	} catch (err) {
-		console.error(err);
-		res.status(500).json({ error: 'Update failed' });
-	}
-});
-
-router.delete('/:id', verifyToken, async (req, res, next) => {
-	const { id } = req.params;
-	try {
-		const [result] = await db.query('DELETE FROM tbl_users WHERE id = ?', [id]);
-		if (result.affectedRows === 0) return res.status(404).json({ message: 'User not found' });
-		res.json({ message: 'User deleted' });
-	} catch (err) {
-		next(err);
-	}
-});
-
-module.exports = router;
+export default router;
