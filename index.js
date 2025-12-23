@@ -6,10 +6,16 @@ require("dotenv").config({ path: envFile });
 
 const express = require("express");
 const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
+
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+
+// Swagger API Documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // routes
 const usersRouter = require("./routes/users");

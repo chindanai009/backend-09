@@ -6,7 +6,67 @@ const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
-// POST /login (mounted at /login)
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: เข้าสู่ระบบ (Login)
+ *     description: |
+ *       ตรวจสอบข้อมูลประจำตัวและสร้าง JWT Token สำหรับการเข้าถึง protected routes
+ *       
+ *       **ขั้นตอน:**
+ *       1. ตรวจสอบว่า username มีอยู่ในระบบ
+ *       2. ตรวจสอบรหัสผ่านว่าตรงกับข้อมูลในฐานข้อมูล
+ *       3. สร้าง JWT Token ที่มีอายุ 1 ชั่วโมง
+ *       4. ส่งกลับ token สำหรับใช้ในการเข้าถึง API endpoints อื่น ๆ
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
+ *           example:
+ *             username: "it68a"
+ *             password: "password123"
+ *     responses:
+ *       200:
+ *         description: เข้าสู่ระบบสำเร็จ
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                   description: "JWT Token - ใช้ใน header: Authorization: Bearer <token>"
+ *       401:
+ *         description: ข้อมูลประจำตัวไม่ถูกต้อง
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               userNotFound:
+ *                 value:
+ *                   error: "User not found"
+ *               invalidPassword:
+ *                 value:
+ *                   error: "Invalid password"
+ *       500:
+ *         description: เซิร์ฟเวอร์เกิดข้อผิดพลาด
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               error: "Login failed"
+ */
 router.post('/', async (req, res) => {
   const { username, password } = req.body;
   try {
