@@ -2,13 +2,14 @@ import express from "express";
 import cors from "cors";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import verifyToken, { activeTokens } from "./middleware/auth.js";
+import verifyToken from "./middleware/auth.js";
 import { specs } from "./config/swagger.js";
 import { db, POOL_SIZE, DB_NAME } from "./config/db.js";
 import usersRouter from "./routes/users.js";
-import authRouter from "./routes/auth.js";
 
 const SECRET_KEY = process.env.JWT_SECRET;
+const activeTokens =
+  globalThis.__activeTokens ?? (globalThis.__activeTokens = new Map());
 
 function setActiveToken(userId, token) {
   activeTokens.set(userId, token);
