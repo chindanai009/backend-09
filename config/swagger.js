@@ -4,76 +4,43 @@ import swaggerUi from "swagger-ui-express";
 const specs = {
   openapi: "3.0.0",
   info: {
-    title: "User Management Service API",
+    title: "User Management API",
     version: "2.0.0",
     description: `
-# Service Integration Platform
+# REST API
 
-A comprehensive REST API service for user lifecycle management and authentication workflows.
+Manage user accounts with simple, secure endpoints.
 
-## Core Features
+## Authentication
 
-### 🔑 Security & Authentication
-- Token-based JWT authentication
-- Secure password hashing with bcrypt
-- Session token management
-- Role-based access control
+Register → Login → Get Token → Include in requests
 
-### 👥 User Management
-- Complete CRUD operations
-- User profile management
-- Account status tracking
-- Bulk user operations support
+For protected endpoints, use the **Authorize** button and enter:
+\`\`\`
+Bearer <your-token>
+\`\`\`
 
-### 📊 System Operations  
-- Health monitoring
-- Database connectivity checks
-- Performance metrics
-- Request logging
+## Endpoints
 
-## 🔐 How to Authenticate
-
-1. Register a new account via \`POST /users\`
-2. Login via \`POST /login\` to receive an access token
-3. For protected endpoints, use the **Authorize** button (top-right)
-4. Enter token format: \`Bearer <your-token>\`
-5. All subsequent requests will include your token automatically
-
-## Endpoint Overview
-
-| Method | Endpoint | Description | Auth |
-|--------|----------|-------------|------|
-| GET | \`/\` | Service status | ❌ |
-| POST | \`/users\` | Create user account | ❌ |
-| POST | \`/login\` | User authentication | ❌ |
-| GET | \`/users\` | List all users | ✅ |
-| GET | \`/users/:id\` | Get user details | ✅ |
-| PUT | \`/users/:id\` | Update user profile | ✅ |
-| DELETE | \`/users/:id\` | Remove user account | ✅ |
-| POST | \`/logout\` | Terminate session | ✅ |
-
-## Error Handling
-
-All responses follow a consistent structure:
-- \`status\`: Operation status (success/error)
-- \`message\`: Human-readable message
-- \`data\`: Response payload
-- \`code\`: Error code (if applicable)
+| Method | Path | Auth |
+|--------|------|------|
+| GET | \`/\` | No |
+| GET | \`/health\` | No |
+| POST | \`/users\` | No |
+| POST | \`/login\` | No |
+| GET | \`/users\` | Yes |
+| GET | \`/users/:id\` | Yes |
+| PUT | \`/users/:id\` | Yes |
+| DELETE | \`/users/:id\` | Yes |
+| POST | \`/logout\` | Yes |
     `,
     contact: {
-      name: "Technical Support",
-      email: "dev-support@service.io",
-      url: "https://service.io/support"
+      name: "Support",
+      email: "support@service.io"
     },
     license: {
-      name: "Apache 2.0",
-      url: "https://www.apache.org/licenses/LICENSE-2.0.html"
-    },
-    termsOfService: "https://service.io/terms"
-  },
-  externalDocs: {
-    description: "📚 View Full Documentation",
-    url: "https://docs.service.io/api"
+      name: "Apache 2.0"
+    }
   },
   servers: [
     {

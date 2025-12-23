@@ -67,10 +67,10 @@ function requireFields(obj, keys) {
 }
 
 // --------------------------------------------------
-// 3) API DOCUMENTATION - Custom Interactive UI
+// 3) API DOCUMENTATION - Minimal Clean Design
 // --------------------------------------------------
 
-// Serve custom API documentation portal (no static file serving needed)
+// Serve API documentation with minimalist design
 app.get("/api-docs", (req, res) => {
   const docHtml = `
 <!DOCTYPE html>
@@ -78,8 +78,7 @@ app.get("/api-docs", (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Portal</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <title>API Documentation</title>
   <style>
     * {
       margin: 0;
@@ -88,89 +87,70 @@ app.get("/api-docs", (req, res) => {
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fafafa;
       color: #333;
-    }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+      line-height: 1.6;
     }
     
     .header {
-      background: white;
-      border-radius: 12px;
-      padding: 40px;
-      margin-bottom: 30px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      background: #fff;
+      padding: 40px 20px;
+      border-bottom: 1px solid #eee;
       text-align: center;
     }
     
     .header h1 {
-      font-size: 2.5em;
-      color: #667eea;
-      margin-bottom: 10px;
+      font-size: 2em;
+      font-weight: 300;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
     }
     
     .header p {
-      font-size: 1.1em;
-      color: #666;
+      color: #888;
+      font-size: 0.95em;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 20px;
     }
     
     .swagger-wrapper {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    }
-    
-    .swagger-wrapper h2 {
-      color: #667eea;
-      margin-bottom: 20px;
-      font-size: 1.5em;
+      background: #fff;
+      padding: 30px;
+      border-radius: 4px;
+      border: 1px solid #eee;
     }
     
     #swagger-ui {
       padding: 0;
     }
     
-    /* Custom Swagger UI styling */
+    /* Minimal Swagger UI overrides */
     .swagger-ui .topbar {
       display: none;
     }
     
-    .swagger-ui .info {
-      margin: 20px 0;
+    .swagger-ui .scheme-container {
+      background: transparent;
+      padding: 0;
+      border: none;
     }
     
     .swagger-ui .info .title {
-      color: #667eea;
-      font-size: 1.8em;
-    }
-    
-    .swagger-ui .scheme-container {
-      background: #f5f5f5;
-      border-radius: 6px;
-    }
-    
-    .swagger-ui .btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: none;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
-    }
-    
-    .swagger-ui .btn:hover {
-      opacity: 0.9;
+      font-size: 1.5em;
+      margin: 0;
+      color: #222;
     }
     
     .swagger-ui .opblock {
-      border-radius: 6px;
-      border-left: 4px solid #667eea;
+      border: 1px solid #eee;
+      border-left: 3px solid #ccc;
+      margin: 15px 0;
+      border-radius: 4px;
     }
     
     .swagger-ui .opblock.opblock-get {
@@ -189,28 +169,32 @@ app.get("/api-docs", (req, res) => {
       border-left-color: #f93e3e;
     }
     
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      color: white;
-      font-size: 0.9em;
+    .swagger-ui .btn {
+      background: #222;
+      border: 1px solid #222;
+      color: #fff;
+      border-radius: 4px;
+    }
+    
+    .swagger-ui .btn:hover {
+      background: #444;
+      border-color: #444;
+    }
+    
+    .swagger-ui .dialog-ux .backdrop-ux {
+      background: rgba(0,0,0,0.3);
     }
   </style>
 </head>
 <body>
+  <div class="header">
+    <h1>API Documentation</h1>
+    <p>Service endpoints and integration guide</p>
+  </div>
+  
   <div class="container">
-    <div class="header">
-      <h1><i class="fas fa-plug"></i> API Portal</h1>
-      <p>Interactive REST API Documentation & Testing Platform</p>
-    </div>
-    
     <div class="swagger-wrapper">
-      <h2><i class="fas fa-book"></i> API Endpoints</h2>
       <div id="swagger-ui"></div>
-    </div>
-    
-    <div class="footer">
-      <p><i class="fas fa-shield-alt"></i> Secure API Integration | Built for Modern Applications</p>
     </div>
   </div>
 
@@ -225,9 +209,7 @@ app.get("/api-docs", (req, res) => {
         persistAuthorization: true,
         presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
         plugins: [SwaggerUIBundle.plugins.DownloadUrl],
-        layout: "StandaloneLayout",
-        defaultModelsExpandDepth: 1,
-        defaultModelExpandDepth: 1
+        layout: "StandaloneLayout"
       });
     };
   </script>
@@ -254,8 +236,7 @@ app.get("/", (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Management Service</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <title>API Service</title>
   <style>
     * {
       margin: 0;
@@ -264,138 +245,108 @@ app.get("/", (req, res) => {
     }
     
     body {
-      font-family: 'Inter', 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #333;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #222;
+      line-height: 1.6;
     }
     
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 50px;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 60px 20px;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      max-width: 500px;
-      margin: 20px;
-    }
-    
-    .icon {
-      font-size: 4em;
-      color: #667eea;
-      margin-bottom: 20px;
     }
     
     h1 {
       font-size: 2.5em;
-      color: #333;
-      margin-bottom: 15px;
+      font-weight: 300;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
     }
     
-    p {
-      font-size: 1.1em;
+    .subtitle {
+      font-size: 1em;
       color: #666;
-      margin-bottom: 30px;
-      line-height: 1.6;
+      margin-bottom: 40px;
+      font-weight: 400;
     }
     
-    .button-group {
+    .links {
       display: flex;
       gap: 15px;
       justify-content: center;
       flex-wrap: wrap;
+      margin-bottom: 50px;
     }
     
     a {
-      display: inline-block;
-      padding: 12px 30px;
-      border-radius: 8px;
+      padding: 12px 24px;
       text-decoration: none;
-      font-weight: 600;
-      font-size: 1em;
-      transition: all 0.3s ease;
+      border: 1px solid #222;
+      color: #222;
+      background: #fff;
+      transition: all 0.2s ease;
+      font-size: 0.9em;
+      letter-spacing: 0.5px;
     }
     
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+    a:hover {
+      background: #222;
+      color: #fff;
     }
     
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    .divider {
+      width: 50px;
+      height: 1px;
+      background: #ddd;
+      margin: 50px auto;
     }
     
-    .btn-secondary {
-      background: #f0f0f0;
-      color: #333;
-      border: 2px solid #667eea;
-    }
-    
-    .btn-secondary:hover {
-      background: #667eea;
-      color: white;
-    }
-    
-    .features {
+    .info {
+      text-align: left;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-top: 30px;
-      text-align: left;
+      gap: 40px;
+      margin-top: 40px;
     }
     
-    .feature {
-      padding: 15px;
-      background: #f9f9f9;
-      border-radius: 8px;
-      border-left: 4px solid #667eea;
+    .info-item h3 {
+      font-size: 0.75em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
     
-    .feature-icon {
-      color: #667eea;
-      margin-right: 10px;
-    }
-    
-    .feature h3 {
+    .info-item p {
       font-size: 0.95em;
-      color: #333;
+      color: #555;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="icon">
-      <i class="fas fa-cube"></i>
+  <div class="container">
+    <h1>API Service</h1>
+    <p class="subtitle">User management & authentication</p>
+    
+    <div class="links">
+      <a href="/api-docs">Documentation</a>
+      <a href="/health">Status</a>
     </div>
     
-    <h1>Service API</h1>
-    <p>Enterprise-grade user management and authentication platform</p>
+    <div class="divider"></div>
     
-    <div class="button-group">
-      <a href="/api-docs" class="btn-primary">
-        <i class="fas fa-book"></i> View API Docs
-      </a>
-      <a href="/health" class="btn-secondary">
-        <i class="fas fa-heartbeat"></i> Health Check
-      </a>
-    </div>
-    
-    <div class="features">
-      <div class="feature">
-        <h3><i class="fas fa-lock feature-icon"></i> Secure Auth</h3>
+    <div class="info">
+      <div class="info-item">
+        <h3>Auth</h3>
+        <p>JWT-based authentication with secure token management</p>
       </div>
-      <div class="feature">
-        <h3><i class="fas fa-users feature-icon"></i> User Mgmt</h3>
-      </div>
-      <div class="feature">
-        <h3><i class="fas fa-chart-line feature-icon"></i> Analytics</h3>
-      </div>
-      <div class="feature">
-        <h3><i class="fas fa-cloud feature-icon"></i> REST API</h3>
+      <div class="info-item">
+        <h3>Users</h3>
+        <p>Complete CRUD operations for user accounts</p>
       </div>
     </div>
   </div>
