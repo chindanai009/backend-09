@@ -67,10 +67,10 @@ function requireFields(obj, keys) {
 }
 
 // --------------------------------------------------
-// 3) API DOCUMENTATION - Minimal Clean Design
+// 3) API DOCUMENTATION - Default Swagger UI
 // --------------------------------------------------
 
-// Serve API documentation with minimalist design
+// Serve API documentation with default Swagger UI
 app.get("/api-docs", (req, res) => {
   const docHtml = `
 <!DOCTYPE html>
@@ -79,125 +79,24 @@ app.get("/api-docs", (req, res) => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>API Documentation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
+    html {
       box-sizing: border-box;
+      overflow-y: scroll;
     }
-    
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #fafafa;
-      color: #333;
-      line-height: 1.6;
-    }
-    
-    .header {
-      background: #fff;
-      padding: 40px 20px;
-      border-bottom: 1px solid #eee;
-      text-align: center;
-    }
-    
-    .header h1 {
-      font-size: 2em;
-      font-weight: 300;
-      margin-bottom: 8px;
-      letter-spacing: -0.02em;
-    }
-    
-    .header p {
-      color: #888;
-      font-size: 0.95em;
-    }
-    
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
-    
-    .swagger-wrapper {
-      background: #fff;
-      padding: 30px;
-      border-radius: 4px;
-      border: 1px solid #eee;
-    }
-    
-    #swagger-ui {
-      padding: 0;
-    }
-    
-    /* Minimal Swagger UI overrides */
-    .swagger-ui .topbar {
-      display: none;
-    }
-    
-    .swagger-ui .scheme-container {
-      background: transparent;
-      padding: 0;
-      border: none;
-    }
-    
-    .swagger-ui .info .title {
-      font-size: 1.5em;
       margin: 0;
-      color: #222;
-    }
-    
-    .swagger-ui .opblock {
-      border: 1px solid #eee;
-      border-left: 3px solid #ccc;
-      margin: 15px 0;
-      border-radius: 4px;
-    }
-    
-    .swagger-ui .opblock.opblock-get {
-      border-left-color: #61affe;
-    }
-    
-    .swagger-ui .opblock.opblock-post {
-      border-left-color: #49cc90;
-    }
-    
-    .swagger-ui .opblock.opblock-put {
-      border-left-color: #fca130;
-    }
-    
-    .swagger-ui .opblock.opblock-delete {
-      border-left-color: #f93e3e;
-    }
-    
-    .swagger-ui .btn {
-      background: #222;
-      border: 1px solid #222;
-      color: #fff;
-      border-radius: 4px;
-    }
-    
-    .swagger-ui .btn:hover {
-      background: #444;
-      border-color: #444;
-    }
-    
-    .swagger-ui .dialog-ux .backdrop-ux {
-      background: rgba(0,0,0,0.3);
+      padding: 0;
+      background: #fafafa;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>API Documentation</h1>
-    <p>Service endpoints and integration guide</p>
-  </div>
-  
-  <div class="container">
-    <div class="swagger-wrapper">
-      <div id="swagger-ui"></div>
-    </div>
-  </div>
-
+  <div id="swagger-ui"></div>
   <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
   <script>
@@ -207,8 +106,13 @@ app.get("/api-docs", (req, res) => {
         dom_id: '#swagger-ui',
         deepLinking: true,
         persistAuthorization: true,
-        presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
-        plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
         layout: "StandaloneLayout"
       });
     };
