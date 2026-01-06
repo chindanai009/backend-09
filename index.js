@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
-const swaggerUi = require("swagger-ui-express");
 
+const { swaggerUi, specs } = require("./swagger.js");
 // ต้องเช็คว่าไฟล์ swagger.js และ routes เขียนแบบ module.exports หรือไม่
 // ถ้าไฟล์เหล่านั้นใช้ export default ให้เปลี่ยนเป็น module.exports ด้วย
 const swaggerSpec = require("./swagger.js"); 

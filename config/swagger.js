@@ -1,4 +1,4 @@
-import swaggerUi from "swagger-ui-express";
+const swaggerUi = require("swagger-ui-express");
 
 // Define OpenAPI spec directly (no file reading needed - works on Vercel)
 const specs = {
@@ -36,11 +36,11 @@ Bearer <your-token>
     `,
     contact: {
       name: "Support",
-      email: "support@service.io"
+      email: "support@service.io",
     },
     license: {
-      name: "Apache 2.0"
-    }
+      name: "Apache 2.0",
+    },
   },
   servers: [
     {
@@ -623,4 +623,4 @@ Bearer <your-token>
   },
 };
 
-export { swaggerUi, specs };
+module.exports = { swaggerUi, specs };
