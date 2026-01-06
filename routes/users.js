@@ -1,7 +1,10 @@
-import express from "express";
-import bcrypt from "bcrypt";
-import verifyToken from "../middleware/auth.js";
-import { db } from "../config/db.js";
+// routes/users.js
+const express = require("express");
+const bcrypt = require("bcrypt");
+
+// 👇 แปลง import เป็น require ให้หมด
+const verifyToken = require("../middleware/auth.js");
+const { db } = require("../config/db.js");
 
 const router = express.Router();
 
@@ -47,54 +50,54 @@ function requireFields(obj, keys) {
 /**
  * @openapi
  * /users:
- *   get:
- *     tags:
- *       - Users
- *     summary: Get all users
- *     description: Retrieve a paginated list of all users
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 100
- *         description: Number of users per page
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           minimum: 1
- *         description: Page number
- *     responses:
- *       200:
- *         description: List of users
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 count:
- *                   type: integer
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/User'
- *                 total:
- *                   type: integer
- *                 page:
- *                   type: integer
- *                 limit:
- *                   type: integer
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Database error
+ * get:
+ * tags:
+ * - Users
+ * summary: Get all users
+ * description: Retrieve a paginated list of all users
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: query
+ * name: limit
+ * schema:
+ * type: integer
+ * minimum: 1
+ * maximum: 100
+ * description: Number of users per page
+ * - in: query
+ * name: page
+ * schema:
+ * type: integer
+ * minimum: 1
+ * description: Page number
+ * responses:
+ * 200:
+ * description: List of users
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * status:
+ * type: string
+ * example: ok
+ * count:
+ * type: integer
+ * data:
+ * type: array
+ * items:
+ * $ref: '#/components/schemas/User'
+ * total:
+ * type: integer
+ * page:
+ * type: integer
+ * limit:
+ * type: integer
+ * 401:
+ * description: Unauthorized
+ * 500:
+ * description: Database error
  */
 router.get("/", verifyToken, async (req, res) => {
   try {
@@ -145,39 +148,39 @@ router.get("/", verifyToken, async (req, res) => {
 /**
  * @openapi
  * /users/{id}:
- *   get:
- *     tags:
- *       - Users
- *     summary: Get user by ID
- *     description: Retrieve a single user by their ID
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: User ID
- *     responses:
- *       200:
- *         description: User found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 data:
- *                   $ref: '#/components/schemas/User'
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: User not found
- *       500:
- *         description: Database error
+ * get:
+ * tags:
+ * - Users
+ * summary: Get user by ID
+ * description: Retrieve a single user by their ID
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * description: User ID
+ * responses:
+ * 200:
+ * description: User found
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * status:
+ * type: string
+ * example: ok
+ * data:
+ * $ref: '#/components/schemas/User'
+ * 401:
+ * description: Unauthorized
+ * 404:
+ * description: User not found
+ * 500:
+ * description: Database error
  */
 router.get("/:id", verifyToken, async (req, res) => {
   try {
@@ -206,42 +209,42 @@ router.get("/:id", verifyToken, async (req, res) => {
 /**
  * @openapi
  * /users:
- *   post:
- *     tags:
- *       - Users
- *     summary: Create a new user
- *     description: Register a new user account
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/NewUser'
- *     responses:
- *       201:
- *         description: User created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 id:
- *                   type: integer
- *                 firstname:
- *                   type: string
- *                 fullname:
- *                   type: string
- *                 lastname:
- *                   type: string
- *                 username:
- *                   type: string
- *       400:
- *         description: Bad request - missing required fields
- *       500:
- *         description: Database error
+ * post:
+ * tags:
+ * - Users
+ * summary: Create a new user
+ * description: Register a new user account
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * $ref: '#/components/schemas/NewUser'
+ * responses:
+ * 201:
+ * description: User created successfully
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * status:
+ * type: string
+ * example: ok
+ * id:
+ * type: integer
+ * firstname:
+ * type: string
+ * fullname:
+ * type: string
+ * lastname:
+ * type: string
+ * username:
+ * type: string
+ * 400:
+ * description: Bad request - missing required fields
+ * 500:
+ * description: Database error
  */
 router.post("/", async (req, res) => {
   try {
@@ -295,61 +298,61 @@ router.post("/", async (req, res) => {
 /**
  * @openapi
  * /users/{id}:
- *   put:
- *     tags:
- *       - Users
- *     summary: Update user
- *     description: Update an existing user's information
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: User ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               firstname:
- *                 type: string
- *               fullname:
- *                 type: string
- *               lastname:
- *                 type: string
- *               username:
- *                 type: string
- *               password:
- *                 type: string
- *               status:
- *                 type: string
- *     responses:
- *       200:
- *         description: User updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 message:
- *                   type: string
- *                   example: User updated successfully
- *       400:
- *         description: No fields to update
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: User not found
- *       500:
- *         description: Database error
+ * put:
+ * tags:
+ * - Users
+ * summary: Update user
+ * description: Update an existing user's information
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * description: User ID
+ * requestBody:
+ * required: true
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * firstname:
+ * type: string
+ * fullname:
+ * type: string
+ * lastname:
+ * type: string
+ * username:
+ * type: string
+ * password:
+ * type: string
+ * status:
+ * type: string
+ * responses:
+ * 200:
+ * description: User updated successfully
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * status:
+ * type: string
+ * example: ok
+ * message:
+ * type: string
+ * example: User updated successfully
+ * 400:
+ * description: No fields to update
+ * 401:
+ * description: Unauthorized
+ * 404:
+ * description: User not found
+ * 500:
+ * description: Database error
  */
 router.put("/:id", verifyToken, async (req, res) => {
   try {
@@ -419,40 +422,40 @@ router.put("/:id", verifyToken, async (req, res) => {
 /**
  * @openapi
  * /users/{id}:
- *   delete:
- *     tags:
- *       - Users
- *     summary: Delete user
- *     description: Delete a user by their ID
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: User ID
- *     responses:
- *       200:
- *         description: User deleted successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: ok
- *                 message:
- *                   type: string
- *                   example: User deleted successfully
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: User not found
- *       500:
- *         description: Database error
+ * delete:
+ * tags:
+ * - Users
+ * summary: Delete user
+ * description: Delete a user by their ID
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: path
+ * name: id
+ * required: true
+ * schema:
+ * type: integer
+ * description: User ID
+ * responses:
+ * 200:
+ * description: User deleted successfully
+ * content:
+ * application/json:
+ * schema:
+ * type: object
+ * properties:
+ * status:
+ * type: string
+ * example: ok
+ * message:
+ * type: string
+ * example: User deleted successfully
+ * 401:
+ * description: Unauthorized
+ * 404:
+ * description: User not found
+ * 500:
+ * description: Database error
  */
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
@@ -477,4 +480,5 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
-module.exports = router; // ✅ ต้องใช้แบบนี้
+// ✅ CommonJS Export
+module.exports = router;

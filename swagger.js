@@ -138,4 +138,4 @@ const specs = {
 };
 
 // ✅ Export แบบ CommonJS เพื่อให้ index.js เรียกใช้ได้โดยไม่พัง
-module.exports = { swaggerUi, specs };
+module.exports = specs;
