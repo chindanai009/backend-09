@@ -216,7 +216,7 @@ router.get("/:id", verifyToken, async (req, res) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UserInput'
+ *             $ref: '#/components/schemas/NewUser'
  *     responses:
  *       201:
  *         description: User created successfully
