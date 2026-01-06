@@ -10,7 +10,14 @@ function baseDefinition() {
             description: "API Documentation with Swagger",
         },
         servers: [
-            { url: "https://09-backend.vercel.app", description: "Development server" },
+            {
+                url: "http://localhost:3000",
+                description: "Local development",
+            },
+            {
+                url: "https://09-backend.vercel.app",
+                description: "Production (Vercel)",
+            },
         ],
         components: {
             securitySchemes: {
