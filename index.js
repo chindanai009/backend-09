@@ -1,25 +1,29 @@
-import express  from "express";
-import cors  from "cors";
-import swaggerUi  from "swagger-ui-express";
-import swaggerSpec  from "./swagger.js";
-import usersRouter from "./routes/users.js"; // ของเดิมคุณ
-import authRouter from "./routes/auth.js";   // ถ้ามี
+const express = require("express");
+const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
+
+// ต้องเช็คว่าไฟล์ swagger.js และ routes เขียนแบบ module.exports หรือไม่
+// ถ้าไฟล์เหล่านั้นใช้ export default ให้เปลี่ยนเป็น module.exports ด้วย
+const swaggerSpec = require("./swagger.js"); 
+const usersRouter = require("./routes/users.js");
+const authRouter = require("./routes/auth.js");
 
 const app = express();
 
 /* ===============================
-   ✅ MIDDLEWARE (จุดสำคัญ)
+   ✅ MIDDLEWARE
 ================================ */
 app.use(cors({
-    origin: "*", // สำหรับ Swagger + Vercel
+    origin: "*", 
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
+    credentials: true
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// รองรับ preflight
+// บรรทัดนี้สำคัญ: Preflight request
 app.options("*", cors());
 
 /* ===============================
@@ -39,13 +43,13 @@ app.get("/ping", (req, res) => {
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /* ===============================
-   ✅ ROUTES (ของเดิม)
+   ✅ ROUTES
 ================================ */
 app.use("/users", usersRouter);
 app.use("/login", authRouter);
 
 /* ===============================
-   ✅ ERROR HANDLER (กัน 500 crash)
+   ✅ ERROR HANDLER
 ================================ */
 app.use((err, req, res, next) => {
     console.error("🔥 ERROR:", err);
@@ -56,6 +60,6 @@ app.use((err, req, res, next) => {
 });
 
 /* ===============================
-   ✅ EXPORT สำหรับ VERCEL
+   ✅ EXPORT สำหรับ VERCEL (ใช้ module.exports คู่กับ require)
 ================================ */
 module.exports = app;

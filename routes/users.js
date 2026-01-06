@@ -477,4 +477,4 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router; // ✅ ต้องใช้แบบนี้
