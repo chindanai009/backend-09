@@ -229,13 +229,10 @@ app.use((err, req, res, next) => {
 // --------------------------------------------------
 
 const PORT = process.env.PORT || 3000;
-
-// ⭐ รันเฉพาะตอน local
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () => {
     console.log(`✅ Server is running on port ${PORT}`);
   });
 }
 
-// ⭐ สำหรับ Vercel
 export default app;
