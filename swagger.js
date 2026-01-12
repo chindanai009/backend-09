@@ -1,6 +1,4 @@
 // swagger.js
-const swaggerUi = require("swagger-ui-express");
-
 // รวม Config และ Spec ไว้ในตัวแปรเดียว (ไม่ต้องใช้ swagger-jsdoc อ่านไฟล์)
 const specs = {
   openapi: "3.0.0",
@@ -25,13 +23,7 @@ const specs = {
         responses: { 200: { description: "Server is running" } }
       }
     },
-    "/ping": {
-      get: {
-        tags: ["Health"],
-        summary: "Ping Pong",
-        responses: { 200: { description: "Returns pong" } }
-      }
-    },
+
     "/login": {
       post: {
         tags: ["Auth"],
@@ -93,6 +85,43 @@ const specs = {
         security: [{ bearerAuth: [] }],
         responses: {
           200: { description: "User details", content: { "application/json": { schema: { $ref: "#/components/schemas/User" } } } },
+          404: { description: "Not found" }
+        }
+      },
+      put: {
+        tags: ["Users"],
+        summary: "Update user",
+        parameters: [{ in: "path", name: "id", required: true, schema: { type: "integer" } }],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  firstname: { type: "string" },
+                  fullname: { type: "string" },
+                  lastname: { type: "string" },
+                  username: { type: "string" },
+                  password: { type: "string" },
+                  status: { type: "string" }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          200: { description: "User updated" },
+          404: { description: "Not found" }
+        }
+      },
+      delete: {
+        tags: ["Users"],
+        summary: "Delete user",
+        parameters: [{ in: "path", name: "id", required: true, schema: { type: "integer" } }],
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "User deleted" },
           404: { description: "Not found" }
         }
       }

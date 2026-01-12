@@ -1,16 +1,21 @@
 // index.js
 const express = require("express");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const swaggerUi = require("swagger-ui-express");
 
 // ✅ เรียกใช้ไฟล์ swagger.js (ตอนนี้มันคือ Object config แล้ว)
 const swaggerSpec = require("./swagger.js");
+const { db } = require("./config/db.js");
 
 const usersRouter = require("./routes/users.js");
-// ⚠️ คอมเมนต์บรรทัดนี้ไว้ก่อน จนกว่าคุณจะสร้างไฟล์ routes/auth.js และแน่ใจว่ามันเขียนถูก
-// const authRouter = require("./routes/auth.js"); 
 
 const app = express();
+
+// JWT Config
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
 
 app.use(cors({
     origin: "*",
@@ -37,7 +42,90 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOption
 
 // ✅ ROUTES
 app.use("/api/users", usersRouter);
-// app.use("/login", authRouter); // เปิดเมื่อพร้อม
+
+// ✅ LOGIN Route
+app.post("/login", async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({
+                status: "error",
+                message: "Username and password are required"
+            });
+        }
+
+        // Find user by username
+        const [rows] = await db.execute(
+            "SELECT id, username, password, firstname, lastname, status FROM tbl_users WHERE username = ?",
+            [username]
+        );
+
+        if (rows.length === 0) {
+            return res.status(401).json({
+                status: "error",
+                message: "Invalid username or password"
+            });
+        }
+
+        const user = rows[0];
+
+        // Check if user is active
+        if (user.status !== "active") {
+            return res.status(401).json({
+                status: "error",
+                message: "Account is not active"
+            });
+        }
+
+        // Verify password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                status: "error",
+                message: "Invalid username or password"
+            });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            {
+                id: user.id,
+                username: user.username,
+                firstname: user.firstname,
+                lastname: user.lastname
+            },
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
+        );
+
+        res.json({
+            status: "ok",
+            message: "Login successful",
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                firstname: user.firstname,
+                lastname: user.lastname
+            }
+        });
+
+    } catch (err) {
+        console.error("Login error:", err);
+        res.status(500).json({ status: "error", message: "Internal server error" });
+    }
+});
+
+// ✅ LOGOUT Route
+app.post("/logout", (req, res) => {
+    // For JWT-based auth, logout is handled client-side by removing the token
+    // This endpoint is for API completeness and can be used to log the action
+    res.json({
+        status: "ok",
+        message: "Logout successful"
+    });
+});
 
 // Error Handler
 app.use((err, req, res, next) => {
