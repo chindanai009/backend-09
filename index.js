@@ -117,13 +117,16 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// ✅ LOGOUT Route
-app.post("/logout", (req, res) => {
+// ✅ LOGOUT Route (Protected)
+const verifyToken = require("./middleware/auth.js");
+
+app.post("/logout", verifyToken, (req, res) => {
     // For JWT-based auth, logout is handled client-side by removing the token
-    // This endpoint is for API completeness and can be used to log the action
-    res.json({
+    // This endpoint confirms the token was valid and logs the action
+    res.status(200).json({
         status: "ok",
-        message: "Logout successful"
+        message: "Logout successful",
+        user: req.user
     });
 });
 
