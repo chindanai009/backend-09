@@ -36,7 +36,7 @@ const swaggerOptions = {
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
 // ✅ ROUTES
-app.use("/users", usersRouter);
+app.use("/api/users", usersRouter);
 // app.use("/login", authRouter); // เปิดเมื่อพร้อม
 
 // Error Handler
