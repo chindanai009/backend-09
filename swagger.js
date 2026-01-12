@@ -10,15 +10,13 @@ const specs = {
     description: "API Documentation",
   },
   servers: [
-    { url: "http://localhost:3000", description: "Local" },
-    { url: process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://api.example.com", description: "Production" },
+    { url: "https://09-backend.vercel.app", description: "Production" },
   ],
   tags: [
     { name: "Users", description: "User management" },
     { name: "Auth", description: "Authentication" },
     { name: "Health", description: "Server health check" }
   ],
-  // 👇 Paths ที่คุณต้องการ (ผมแกะจาก allowed list ของคุณ)
   paths: {
     "/": {
       get: {
@@ -41,7 +39,7 @@ const specs = {
         requestBody: {
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/Login" } // อ้างอิง Schema ด้านล่าง
+              schema: { $ref: "#/components/schemas/Login" }
             }
           }
         },
@@ -51,7 +49,18 @@ const specs = {
         }
       }
     },
-    "/users": {
+    "/logout": {
+      post: {
+        tags: ["Auth"],
+        summary: "Logout",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: { description: "Logout successful" },
+          401: { description: "Unauthorized" }
+        }
+      }
+    },
+    "/api/users": {
       get: {
         tags: ["Users"],
         summary: "Get all users",
@@ -76,7 +85,7 @@ const specs = {
         responses: { 201: { description: "Created" } }
       }
     },
-    "/users/{id}": {
+    "/api/users/{id}": {
       get: {
         tags: ["Users"],
         summary: "Get user by ID",
