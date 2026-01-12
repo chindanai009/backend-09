@@ -4,7 +4,7 @@ const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 
 // ✅ เรียกใช้ไฟล์ swagger.js (ตอนนี้มันคือ Object config แล้ว)
-const swaggerSpec = require("./swagger.js"); 
+const swaggerSpec = require("./swagger.js");
 
 const usersRouter = require("./routes/users.js");
 // ⚠️ คอมเมนต์บรรทัดนี้ไว้ก่อน จนกว่าคุณจะสร้างไฟล์ routes/auth.js และแน่ใจว่ามันเขียนถูก
@@ -13,7 +13,7 @@ const usersRouter = require("./routes/users.js");
 const app = express();
 
 app.use(cors({
-    origin: "*", 
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true
 }));
@@ -25,8 +25,15 @@ app.get("/", (req, res) => {
     res.json({ status: "ok", message: "Backend is running" });
 });
 
-// ✅ SWAGGER Setup
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// ✅ SWAGGER Setup - Use CDN for Vercel compatibility
+const swaggerOptions = {
+    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css',
+    customJs: [
+        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js'
+    ]
+};
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
 // ✅ ROUTES
 app.use("/users", usersRouter);
