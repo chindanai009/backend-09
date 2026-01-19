@@ -198,6 +198,10 @@ function hydrateDbMocks() {
       return [{ affectedRows: before !== users.length ? 1 : 0 }];
     }
 
+    if (sql.includes("DELETE FROM tbl_orders WHERE user_id = ?")) {
+      return [{ affectedRows: 0 }]; // Mock output for orders deletion
+    }
+
     return [[]];
   });
 }

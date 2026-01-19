@@ -461,6 +461,10 @@ router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
 
+    // ลบ orders ของ user นั้นก่อน
+    await db.execute("DELETE FROM tbl_orders WHERE user_id = ?", [id]);
+
+    // แล้วค่อยลบ user
     const [result] = await db.execute("DELETE FROM tbl_users WHERE id = ?", [
       id,
     ]);

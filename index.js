@@ -30,6 +30,11 @@ app.get("/", (req, res) => {
     res.json({ status: "ok", message: "Backend is running" });
 });
 
+// เพิ่มหลังจาก app.get("/", ...) 
+app.get("/ping", (req, res) => {
+    res.json({ status: "pong", message: "Server is alive" });
+});
+
 // ✅ SWAGGER Setup - Use CDN for Vercel compatibility
 const swaggerOptions = {
     customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css',
